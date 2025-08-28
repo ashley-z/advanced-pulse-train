@@ -271,3 +271,12 @@ const calculateAvg = (min, max) => {
 - **Pattern**: ON, OFF, ON, OFF, ... (repeating for each pulse)
 - **Maximum Pulses**: 511 pulses supported
 - **Time Span Sampling**: Randomly sample from min/max ranges for each segment
+- **Time Span Precision**: All values rounded to 2 decimal places
+
+### Advanced Settings Implementation
+- **Modal Access**: Gear icon (⚙️) opens Advanced Settings modal for each parameter
+- **Step Size Control**: Individual step size settings for Period, Pulse Width, and Interval
+- **Step Size Validation**: Only positive integers allowed (empty = no constraint)
+- **Rounding Algorithm**: Round to nearest step size increment, then to 2 decimal places
+- **Real-time Updates**: Waveform regenerates automatically when settings are applied
+- **User Interface**: Clean modal with step size explanation and parameter-specific inputs

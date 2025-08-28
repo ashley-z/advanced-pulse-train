@@ -107,9 +107,18 @@ The Advanced Pulse Train Interface provides an intuitive GUI for setting up comp
 - **Waveform Structure**: Waveform consists of (pulse × pulse count) segments
 - **Output Values**: ON segments use amplitude percentage, OFF segments use 0%
 - **Time Spans**: Randomly sampled from min/max ranges using Mersenne Twister uniform distribution
+- **Time Span Precision**: All time span values rounded to 2 decimal places
 - **Pulse Count**: Maximum of 511 pulses supported
 - **Example**: For 2 pulses with amplitude 10%, the table shows: 10%, 0%, 10%, 0% (2 pulses × 2 segments = 4 segments total)
 - **Random Sampling**: Each time span value is randomly generated within the specified min/max ranges
+
+#### Advanced Settings
+- **Access**: Click gear icon (⚙️) next to any parameter to open Advanced Settings modal
+- **Step Size Control**: Set step size increments for Period, Pulse Width, and Interval
+- **Step Size Validation**: Only positive integers allowed (or leave blank for no constraint)
+- **Rounding Behavior**: Time span values rounded to nearest step size increment
+- **Precision**: All time span values displayed with 2 decimal places
+- **Example**: Step size of 5 rounds 287.34ms to 285.00ms, 89.67ms to 90.00ms
 
 ## Technical Details
 
@@ -234,7 +243,7 @@ const generateRandomValue = (min, max) => {
 - **Pulse Width Segments**: Randomly sampled from pulse width min/max range
 - **Interval Segments**: Randomly sampled from interval min/max range
 - **Distribution**: Uniform distribution using Mersenne Twister algorithm
-- **Precision**: Values rounded to 1 decimal place
+- **Precision**: Values rounded to 2 decimal places
 
 **Segment Structure:**
 - **One pulse** = **2 segments** (1 ON segment + 1 OFF segment)
@@ -243,6 +252,14 @@ const generateRandomValue = (min, max) => {
 - **Waveform** = (pulse × pulse count) segments
 - **Example**: 2 pulses = 4 segments (ON, OFF, ON, OFF)
 - **Example**: 3 pulses = 6 segments (ON, OFF, ON, OFF, ON, OFF)
+
+**Step Size Rounding:**
+- **No Step Size**: Values rounded to 2 decimal places
+- **With Step Size**: First rounded to nearest step size increment, then to 2 decimal places
+- **Validation**: Only positive integers allowed for step size values
+- **Examples**: 
+  - Step size 5: 287.34ms → 285.00ms, 89.67ms → 90.00ms
+  - Step size 10: 287.34ms → 290.00ms, 89.67ms → 90.00ms
 
 ### State Management Architecture
 - **Main State**: Stores the actual validated parameter values

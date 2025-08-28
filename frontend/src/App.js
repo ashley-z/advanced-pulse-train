@@ -44,6 +44,15 @@ function App() {
     { output: '0', timeSpan: '0' }
   ]);
 
+  // Advanced Settings state
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
+  const [activeParameter, setActiveParameter] = useState('');
+  const [stepSizes, setStepSizes] = useState({
+    period: '',
+    pulseWidth: '',
+    interval: ''
+  });
+
   // Initialize Mersenne Twister generator
   const mt = new MersenneTwister();
 
@@ -57,6 +66,16 @@ function App() {
     return minVal + (mt.random() * (maxVal - minVal));
   };
 
+  // Round value to nearest step size if step size is set
+  const roundToStepSize = (value, parameter) => {
+    const stepSize = parseInt(stepSizes[parameter]) || 0;
+    if (stepSize <= 0) return parseFloat(value.toFixed(2));
+    
+    // Round to nearest step size, then to 2 decimal places
+    const roundedToStep = Math.round(value / stepSize) * stepSize;
+    return parseFloat(roundedToStep.toFixed(2));
+  };
+
   // Update waveform definition table based on current parameters
   const updateWaveformDefinition = () => {
     const pulseCountNum = parseInt(pulseCount) || 1;
@@ -66,21 +85,23 @@ function App() {
     
     // Generate waveform definition for each pulse
     for (let i = 0; i < pulseCountNum && i < 8; i++) {
-      // Sample pulse width from min/max range
+      // Sample pulse width from min/max range and apply step size rounding
       const sampledPulseWidth = generateRandomValue(pulseWidth.min, pulseWidth.max);
+      const roundedPulseWidth = roundToStepSize(sampledPulseWidth, 'pulseWidth');
       
       // First segment: Pulse ON (pulse width duration)
       newWaveformDefinition.push({
         output: amplitudeNum.toString(),
-        timeSpan: sampledPulseWidth.toFixed(1)
+        timeSpan: roundedPulseWidth.toFixed(2)
       });
       
       // Second segment: Pulse OFF (interval duration) - always add OFF segment
       const sampledInterval = generateRandomValue(interval.min, interval.max);
+      const roundedInterval = roundToStepSize(sampledInterval, 'interval');
       
       newWaveformDefinition.push({
         output: '0',
-        timeSpan: sampledInterval.toFixed(1)
+        timeSpan: roundedInterval.toFixed(2)
       });
     }
     
@@ -496,6 +517,35 @@ function App() {
     setLockedParameter(parameter); // Lock this parameter
   };
 
+  // Open advanced settings for a parameter
+  const openAdvancedSettings = (parameter) => {
+    setActiveParameter(parameter);
+    setShowAdvancedSettings(true);
+  };
+
+  // Close advanced settings
+  const closeAdvancedSettings = () => {
+    setShowAdvancedSettings(false);
+    setActiveParameter('');
+  };
+
+  // Handle step size change
+  const handleStepSizeChange = (parameter, value) => {
+    // Only allow positive integers or empty string
+    if (value === '' || (/^\d+$/.test(value) && parseInt(value) > 0)) {
+      setStepSizes(prev => ({
+        ...prev,
+        [parameter]: value
+      }));
+    }
+  };
+
+  // Apply advanced settings
+  const applyAdvancedSettings = () => {
+    closeAdvancedSettings();
+    updateWaveformDefinition(); // Regenerate waveform with new step sizes
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 p-6">
       <div className="max-w-6xl mx-auto bg-white rounded-lg shadow-lg p-6">
@@ -625,7 +675,7 @@ function App() {
 
                          {/* Period */}
              <div>
-               <label className="block text-sm font-medium text-gray-700 mb-1">Period:</label>
+               <label className="block text-sm font-medium text-gray-700 mb-1">Period (PW + I):</label>
                <div className="grid grid-cols-3 gap-2 items-center">
                  <div>
                    <label className="block text-xs text-gray-600 mb-1">Min:</label>
@@ -685,14 +735,19 @@ function App() {
                    >
                      {lockedParameter === 'period' ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
                    </button>
-                   <Settings className="w-5 h-5 text-gray-600 mb-2" />
+                   <button
+                     onClick={() => openAdvancedSettings('period')}
+                     className="p-1 rounded transition-colors text-gray-600 hover:text-blue-600 mb-2"
+                   >
+                     <Settings className="w-5 h-5" />
+                   </button>
                  </div>
                </div>
              </div>
 
                            {/* Pulse Width */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Pulse Width:</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Pulse Width (PW):</label>
                 <div className="grid grid-cols-3 gap-2 items-center">
                                      <div>
                      <label className="block text-xs text-gray-600 mb-1">Min:</label>
@@ -752,14 +807,19 @@ function App() {
                      >
                        {lockedParameter === 'pulseWidth' ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
                      </button>
-                     <Settings className="w-5 h-5 text-gray-600 mb-2" />
+                     <button
+                       onClick={() => openAdvancedSettings('pulseWidth')}
+                       className="p-1 rounded transition-colors text-gray-600 hover:text-blue-600 mb-2"
+                     >
+                       <Settings className="w-5 h-5" />
+                     </button>
                    </div>
                 </div>
               </div>
 
                              {/* Interval */}
                <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Interval:</label>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Interval (I):</label>
                  <div className="grid grid-cols-3 gap-2 items-center">
                                     <div>
                    <label className="block text-xs text-gray-600 mb-1">Min:</label>
@@ -819,7 +879,12 @@ function App() {
                      >
                        {lockedParameter === 'interval' ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
                      </button>
-                     <Settings className="w-5 h-5 text-gray-600 mb-2" />
+                     <button
+                       onClick={() => openAdvancedSettings('interval')}
+                       className="p-1 rounded transition-colors text-gray-600 hover:text-blue-600 mb-2"
+                     >
+                       <Settings className="w-5 h-5" />
+                     </button>
                    </div>
                  </div>
                </div>
@@ -945,6 +1010,67 @@ function App() {
           </div>
         </div>
       </div>
+
+      {/* Advanced Settings Modal */}
+      {showAdvancedSettings && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-96 max-w-md">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Advanced Settings</h2>
+            
+            {/* Step Size Section */}
+            <div className="mb-4">
+              <h3 className="text-sm font-bold text-gray-700 mb-2">Step Size</h3>
+              <p className="text-xs text-gray-600 mb-3">
+                Enter a positive integer, or you may leave it blank in which case the value can be a positive real number.
+              </p>
+            </div>
+
+            {/* Parameter Input Fields */}
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">Period:</label>
+                <input
+                  type="text"
+                  value={stepSizes.period}
+                  onChange={(e) => handleStepSizeChange('period', e.target.value)}
+                  className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="Enter step size"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">Pulse Width:</label>
+                <input
+                  type="text"
+                  value={stepSizes.pulseWidth}
+                  onChange={(e) => handleStepSizeChange('pulseWidth', e.target.value)}
+                  className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="Enter step size"
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <label className="text-sm font-medium text-gray-700">Interval:</label>
+                <input
+                  type="text"
+                  value={stepSizes.interval}
+                  onChange={(e) => handleStepSizeChange('interval', e.target.value)}
+                  className="w-24 px-2 py-1 border border-gray-300 rounded text-sm"
+                  placeholder="Enter step size"
+                />
+              </div>
+            </div>
+
+            {/* Action Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={applyAdvancedSettings}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-medium transition-colors"
+              >
+                OK
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
