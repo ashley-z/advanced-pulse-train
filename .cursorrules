@@ -131,3 +131,128 @@ if (!token) {
 - Add support for Figma design systems
 - Create webhook integrations
 - Add support for multiple Figma accounts
+
+## Advanced Pulse Train Validation and Mathematical Rules
+
+### Core Mathematical Relationship
+The pulse train system enforces the fundamental relationship:
+```
+Period = Pulse Width + Interval
+```
+
+This relationship is the cornerstone of all calculations and validations in the system.
+
+### Parameter Locking System
+The system implements an intelligent parameter locking mechanism where **exactly one parameter must always be locked**:
+
+- **Period Locked**: When period is locked, changing pulse width automatically recalculates interval
+- **Pulse Width Locked**: When pulse width is locked, changing period automatically recalculates interval  
+- **Interval Locked**: When interval is locked, changing period automatically recalculates pulse width
+
+### Validation Rules
+
+#### 1. Basic Input Validation
+```javascript
+// All parameters must be positive numbers
+const isValidPositiveNumber = (value) => {
+  const num = parseFloat(value);
+  return !isNaN(num) && num >= 0;
+};
+
+// Min values must be less than or equal to Max values
+const isValidMinMax = (min, max) => {
+  const minVal = parseFloat(min) || 0;
+  const maxVal = parseFloat(max) || 0;
+  return minVal <= maxVal;
+};
+```
+
+#### 2. Mathematical Constraint Validation
+The system prevents invalid configurations by checking:
+
+**When Period is Locked:**
+- Changing pulse width: Ensures `Period - Pulse Width ≥ 0` (no negative intervals)
+- Changing interval: Ensures `Period - Interval ≥ 0` (no negative pulse widths)
+
+**When Pulse Width is Locked:**
+- Changing period: Ensures `Period - Pulse Width ≥ 0` (no negative intervals)
+
+**When Interval is Locked:**
+- Changing period: Ensures `Period - Interval ≥ 0` (no negative pulse widths)
+
+#### 3. Real-time Calculation Examples
+
+**Example 1: Period Locked**
+```
+Initial State:
+- Period: Min = 120ms, Max = 540ms (locked)
+- Pulse Width: Min = 100ms, Max = 400ms
+- Interval: Min = 20ms, Max = 140ms
+
+Action: Change Pulse Width Min to 50ms
+Calculation: 
+- New Interval Min = 120 - 50 = 70ms
+- New Interval Max = 540 - 400 = 140ms
+Result: Interval updates to Min = 70ms, Max = 140ms
+```
+
+**Example 2: Pulse Width Locked**
+```
+Initial State:
+- Period: Min = 120ms, Max = 540ms
+- Pulse Width: Min = 100ms, Max = 400ms (locked)
+- Interval: Min = 20ms, Max = 140ms
+
+Action: Change Period Min to 200ms
+Calculation:
+- New Interval Min = 200 - 100 = 100ms
+- New Interval Max = 540 - 400 = 140ms
+Result: Interval updates to Min = 100ms, Max = 140ms
+```
+
+**Example 3: Interval Locked**
+```
+Initial State:
+- Period: Min = 120ms, Max = 540ms
+- Pulse Width: Min = 100ms, Max = 400ms
+- Interval: Min = 20ms, Max = 140ms (locked)
+
+Action: Change Period Min to 150ms
+Calculation:
+- New Pulse Width Min = 150 - 20 = 130ms
+- New Pulse Width Max = 540 - 140 = 400ms
+Result: Pulse Width updates to Min = 130ms, Max = 400ms
+```
+
+### Average Calculation
+All parameters automatically calculate their average values:
+```javascript
+const calculateAvg = (min, max) => {
+  const minVal = parseFloat(min) || 0;
+  const maxVal = parseFloat(max) || 0;
+  return ((minVal + maxVal) / 2).toFixed(1);
+};
+```
+
+### State Management Architecture
+- **Main State**: Stores the actual validated parameter values
+- **Local State**: Manages user input and display values
+- **Synchronization**: Automatic sync between main and local states with validation
+- **Validation Triggers**: Real-time validation on blur and Enter key press
+
+### Validation Flow
+1. **Input Validation**: Check if value is a positive number
+2. **Range Validation**: Ensure min ≤ max for the parameter
+3. **Constraint Validation**: Check mathematical relationships based on locked parameter
+4. **State Update**: Update both main and local states if validation passes
+5. **Recalculation**: Automatically recalculate dependent parameters
+6. **UI Update**: Synchronize local state to reflect calculated values
+
+### Implementation Requirements
+- Always maintain the mathematical relationship `Period = Pulse Width + Interval`
+- Ensure exactly one parameter is locked at all times
+- Implement real-time validation on user input
+- Update both main and local states when recalculating parameters
+- Prevent invalid configurations that would result in negative values
+- Provide immediate visual feedback for locked parameters
+- Calculate and display average values automatically

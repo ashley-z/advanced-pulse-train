@@ -190,6 +190,13 @@ function App() {
         avg: calculateAvg(newIntervalMin.toString(), newIntervalMax.toString()),
         max: newIntervalMax.toString()
       });
+      
+      // Update local interval state to reflect the new calculated values
+      setLocalInterval({
+        min: newIntervalMin.toString(),
+        avg: calculateAvg(newIntervalMin.toString(), newIntervalMax.toString()),
+        max: newIntervalMax.toString()
+      });
     } else if (lockedParameter === 'interval') {
       // Interval is locked, recalculate period
       updatePeriod(newPulseWidth.min, newPulseWidth.max, interval.min, interval.max);
@@ -287,6 +294,13 @@ function App() {
         avg: calculateAvg(newPulseWidthMin.toString(), newPulseWidthMax.toString()),
         max: newPulseWidthMax.toString()
       });
+      
+      // Update local pulse width state to reflect the new calculated values
+      setLocalPulseWidth({
+        min: newPulseWidthMin.toString(),
+        avg: calculateAvg(newPulseWidthMin.toString(), newPulseWidthMax.toString()),
+        max: newPulseWidthMax.toString()
+      });
     } else if (lockedParameter === 'pulseWidth') {
       // Pulse width is locked, recalculate period
       updatePeriod(pulseWidth.min, pulseWidth.max, newInterval.min, newInterval.max);
@@ -377,6 +391,13 @@ function App() {
       const newIntervalMax = periodMax - pwMax;
       
       setInterval({
+        min: newIntervalMin.toString(),
+        avg: calculateAvg(newIntervalMin.toString(), newIntervalMax.toString()),
+        max: newIntervalMax.toString()
+      });
+      
+      // Update local interval state to reflect the new calculated values
+      setLocalInterval({
         min: newIntervalMin.toString(),
         avg: calculateAvg(newIntervalMin.toString(), newIntervalMax.toString()),
         max: newIntervalMax.toString()
