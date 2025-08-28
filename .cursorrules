@@ -1,0 +1,133 @@
+# Figma MCP Integration Project - Cursor Rules
+
+## Project Overview
+This is a Model Context Protocol (MCP) integration for Figma that allows AI assistants and tools to access Figma design files through a standardized interface.
+
+## Architecture
+- **MCP Server**: `figma-mcp-server.js` - Main server implementing the MCP protocol
+- **MCP Client**: `client-example.js` - Example client demonstrating usage
+- **API Integration**: Direct Figma API calls with proper authentication
+- **ES Modules**: All files use modern ES module syntax
+
+## Coding Standards
+
+### JavaScript/Node.js
+- Use ES modules (import/export) instead of CommonJS (require/module.exports)
+- Use async/await for all asynchronous operations
+- Implement proper error handling with try/catch blocks
+- Use descriptive variable and function names
+- Add JSDoc comments for complex functions
+- Use const for immutable variables, let for mutable ones
+
+### MCP Protocol Implementation
+- Follow the Model Context Protocol specification strictly
+- Implement proper request/response handling
+- Use correct MCP message formats and types
+- Handle errors gracefully and return appropriate error responses
+- Maintain backward compatibility with MCP versions
+
+### Figma API Integration
+- Always use environment variables for sensitive data (tokens, keys)
+- Implement proper rate limiting and error handling
+- Use appropriate HTTP status codes and error messages
+- Cache responses when appropriate to reduce API calls
+- Validate all input parameters before making API calls
+
+## File Structure
+```
+/
+├── figma-mcp-server.js      # Main MCP server
+├── client-example.js         # Example MCP client
+├── test-*.js                # Test files
+├── package.json             # Dependencies and scripts
+├── .env                     # Environment variables (gitignored)
+├── .cursorrules            # This file
+└── README.md               # Documentation
+```
+
+## Security Guidelines
+- Never commit `.env` files or sensitive tokens
+- Use environment variables for all configuration
+- Validate and sanitize all user inputs
+- Implement proper authentication and authorization
+- Log security-relevant events appropriately
+
+## Testing Requirements
+- Create test files for all major functionality
+- Test both success and error scenarios
+- Mock external API calls in unit tests
+- Test MCP protocol compliance
+- Verify Figma API integration works correctly
+
+## Documentation Standards
+- Keep README.md up to date with setup instructions
+- Document all MCP tools and resources
+- Include examples for common use cases
+- Document error codes and troubleshooting steps
+- Maintain API documentation for custom functions
+
+## Development Workflow
+1. Always test API changes with the test scripts
+2. Verify MCP protocol compliance before committing
+3. Update documentation when adding new features
+4. Use semantic versioning for releases
+5. Test with actual Figma files before deployment
+
+## Common Patterns
+
+### Error Handling
+```javascript
+try {
+  const response = await axios.get(url, { headers });
+  return response.data;
+} catch (error) {
+  console.error('API Error:', error.message);
+  throw new Error(`Failed to fetch data: ${error.message}`);
+}
+```
+
+### MCP Tool Implementation
+```javascript
+this.server.setRequestHandler('tools/call', async (request) => {
+  const { name, arguments: args } = request.params;
+  
+  switch (name) {
+    case 'tool_name':
+      return await this.handleTool(args);
+    default:
+      throw new Error(`Unknown tool: ${name}`);
+  }
+});
+```
+
+### Environment Configuration
+```javascript
+import dotenv from 'dotenv';
+dotenv.config();
+
+const token = process.env.FIGMA_ACCESS_TOKEN;
+if (!token) {
+  throw new Error('FIGMA_ACCESS_TOKEN is required');
+}
+```
+
+## Performance Considerations
+- Implement caching for frequently accessed data
+- Use connection pooling for HTTP requests
+- Minimize API calls by batching requests
+- Implement proper cleanup in MCP server shutdown
+- Monitor memory usage and implement garbage collection
+
+## Troubleshooting
+- Check environment variables are set correctly
+- Verify Figma API token has proper scopes
+- Test MCP server connectivity
+- Check network connectivity for API calls
+- Review error logs for debugging
+
+## Future Enhancements
+- Add support for Figma plugins
+- Implement real-time collaboration features
+- Add support for Figma design systems
+- Create webhook integrations
+- Add support for multiple Figma accounts

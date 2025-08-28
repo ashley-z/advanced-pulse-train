@@ -1,0 +1,23 @@
+{
+  "name": "figma-mcp-integration",
+  "version": "1.0.0",
+  "description": "Connect Figma files to MCP (Model Context Protocol)",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^0.4.0",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "ws": "^8.14.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": ["figma", "mcp", "model-context-protocol"],
+  "author": "",
+  "license": "MIT"
+}
