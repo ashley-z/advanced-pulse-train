@@ -11,6 +11,80 @@ import {
   Maximize2
 } from 'lucide-react';
 
+// WaveformDisplay Component
+const WaveformDisplay = ({ waveformDefinition, amplitude, height, width }) => {
+  const margin = 20;
+  const plotHeight = height - 2 * margin;
+  const plotWidth = width - 2 * margin;
+  
+  // Calculate total time and find max amplitude for scaling
+  const totalTime = waveformDefinition.reduce((sum, segment) => sum + parseFloat(segment.timeSpan) || 0, 0);
+  const maxAmplitude = Math.max(amplitude, 1); // Ensure we have a valid scale
+  
+  // Generate path data for the waveform
+  let pathData = `M ${margin} ${height - margin}`; // Start at bottom left
+  let currentX = margin;
+  let currentY = height - margin;
+  
+  waveformDefinition.forEach((segment, index) => {
+    const timeSpan = parseFloat(segment.timeSpan) || 0;
+    const output = parseFloat(segment.output) || 0;
+    
+    if (timeSpan > 0) {
+      // Calculate segment width based on time proportion
+      const segmentWidth = (timeSpan / totalTime) * plotWidth;
+      
+      // Calculate Y position based on output percentage
+      const outputY = height - margin - (output / maxAmplitude) * plotHeight;
+      
+      // Draw the segment
+      if (index === 0) {
+        // First segment: move to start position
+        pathData += ` M ${currentX} ${outputY}`;
+      } else {
+        // Subsequent segments: draw line to new position
+        pathData += ` L ${currentX} ${outputY}`;
+      }
+      
+      // Draw horizontal line for the duration
+      pathData += ` L ${currentX + segmentWidth} ${outputY}`;
+      
+      currentX += segmentWidth;
+      currentY = outputY;
+    }
+  });
+  
+  // Close the path back to baseline
+  pathData += ` L ${currentX} ${height - margin}`;
+  
+  return (
+    <g>
+      {/* Waveform path */}
+      <path
+        d={pathData}
+        stroke="#FFD700"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      
+      {/* Amplitude labels */}
+      <text x={margin - 10} y={margin + 10} fill="#FFD700" fontSize="12" textAnchor="end">
+        {maxAmplitude}%
+      </text>
+      <text x={margin - 10} y={height - margin + 5} fill="#FFD700" fontSize="12" textAnchor="end">
+        0%
+      </text>
+      
+      {/* Time scale */}
+      <text x={width / 2} y={height - 5} fill="#FFD700" fontSize="12" textAnchor="middle">
+        Time (ms)
+      </text>
+    </g>
+  );
+};
+
 function App() {
   const [isRunning, setIsRunning] = useState(false);
   const [lightSource, setLightSource] = useState('');
@@ -78,13 +152,17 @@ function App() {
 
   // Update waveform definition table based on current parameters
   const updateWaveformDefinition = () => {
-    const pulseCountNum = parseInt(pulseCount) || 1;
+    const pulseCountNum = parseFloat(pulseCount) || 1;
     const amplitudeNum = parseFloat(amplitude) || 0;
     
     const newWaveformDefinition = [];
     
-    // Generate waveform definition for each pulse
-    for (let i = 0; i < pulseCountNum && i < 8; i++) {
+    // Calculate how many complete pulses and partial pulse to generate
+    const completePulses = Math.floor(pulseCountNum);
+    const partialPulse = pulseCountNum - completePulses;
+    
+    // Generate waveform definition for complete pulses
+    for (let i = 0; i < completePulses && i < 8; i++) {
       // Sample pulse width from min/max range and apply step size rounding
       const sampledPulseWidth = generateRandomValue(pulseWidth.min, pulseWidth.max);
       const roundedPulseWidth = roundToStepSize(sampledPulseWidth, 'pulseWidth');
@@ -102,6 +180,17 @@ function App() {
       newWaveformDefinition.push({
         output: '0',
         timeSpan: roundedInterval.toFixed(2)
+      });
+    }
+    
+    // Add partial pulse if needed
+    if (partialPulse > 0 && newWaveformDefinition.length < 8) {
+      const sampledPulseWidth = generateRandomValue(pulseWidth.min, pulseWidth.max);
+      const roundedPulseWidth = roundToStepSize(sampledPulseWidth * partialPulse, 'pulseWidth');
+      
+      newWaveformDefinition.push({
+        output: amplitudeNum.toString(),
+        timeSpan: roundedPulseWidth.toFixed(2)
       });
     }
     
@@ -139,9 +228,16 @@ function App() {
   };
 
   const handlePulseCountChange = (value) => {
-    if (isValidPositiveNumber(value)) {
+    setPulseCount(value);
+  };
+
+  const validatePulseCount = (value) => {
+    if (isValidPulseCount(value)) {
       setPulseCount(value);
       updateWaveformDefinition();
+    } else {
+      // Revert to previous valid value
+      setPulseCount(pulseCount);
     }
   };
 
@@ -177,6 +273,12 @@ function App() {
   const isValidPositiveNumber = (value) => {
     const num = parseFloat(value);
     return !isNaN(num) && num >= 0;
+  };
+
+  // Validate pulse count specifically (allows values less than 1)
+  const isValidPulseCount = (value) => {
+    const num = parseFloat(value);
+    return !isNaN(num) && num >= 0 && num <= 511;
   };
 
   // Validate that min < max for a parameter
@@ -893,13 +995,19 @@ function App() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Pulse Count:</label>
               <div className="flex items-center space-x-2">
-                                       <input
-                         type="text"
-                         value={pulseCount}
-                         onChange={(e) => handlePulseCountChange(e.target.value)}
-                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                         placeholder="Enter pulse count"
-                       />
+                                                       <input
+                  type="text"
+                  value={pulseCount}
+                  onChange={(e) => handlePulseCountChange(e.target.value)}
+                  onBlur={(e) => validatePulseCount(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      validatePulseCount(e.target.value);
+                    }
+                  }}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter pulse count"
+                />
                 <button
                   onClick={handleMaxPulseCount}
                   className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md font-medium transition-colors"
@@ -913,8 +1021,24 @@ function App() {
 
         {/* Display Area */}
         <div className="mb-6">
-          <div className="w-full h-64 bg-black rounded-lg flex items-center justify-center">
-            <div className="text-white text-lg">Waveform Display Area</div>
+          <div className="w-full h-64 bg-black rounded-lg p-4">
+            <svg width="100%" height="100%" viewBox="0 0 800 200" className="w-full h-full">
+              {/* Grid lines */}
+              <defs>
+                <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#333" strokeWidth="0.5"/>
+                </pattern>
+              </defs>
+              <rect width="100%" height="100%" fill="url(#grid)" />
+              
+              {/* Waveform */}
+              <WaveformDisplay 
+                waveformDefinition={waveformDefinition}
+                amplitude={parseFloat(amplitude) || 0}
+                height={200}
+                width={800}
+              />
+            </svg>
           </div>
         </div>
 

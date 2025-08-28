@@ -269,9 +269,18 @@ const calculateAvg = (min, max) => {
 - **Total Segments**: 2 × pulse count (each pulse has 2 segments)
 - **Random Sampling**: Use Mersenne Twister uniform distribution for time span values
 - **Pattern**: ON, OFF, ON, OFF, ... (repeating for each pulse)
-- **Maximum Pulses**: 511 pulses supported
+- **Pulse Count Range**: 0-511 pulses (supports fractional values)
+- **Fractional Pulses**: Generate partial pulses for non-integer pulse counts
 - **Time Span Sampling**: Randomly sample from min/max ranges for each segment
 - **Time Span Precision**: All values rounded to 2 decimal places
+
+### Visual Waveform Display
+- **SVG-based Display**: Real-time visualization of pulse train
+- **Rising/Falling Edges**: Sharp vertical transitions between amplitude levels
+- **Proportional Scaling**: Segment widths proportional to time spans
+- **Amplitude Visualization**: Visual height corresponds to output percentage
+- **Grid Background**: Reference grid for visual alignment
+- **Consistent Rendering**: Display matches waveform definition table exactly
 
 ### Advanced Settings Implementation
 - **Modal Access**: Gear icon (⚙️) opens Advanced Settings modal for each parameter

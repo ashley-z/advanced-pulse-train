@@ -108,9 +108,17 @@ The Advanced Pulse Train Interface provides an intuitive GUI for setting up comp
 - **Output Values**: ON segments use amplitude percentage, OFF segments use 0%
 - **Time Spans**: Randomly sampled from min/max ranges using Mersenne Twister uniform distribution
 - **Time Span Precision**: All time span values rounded to 2 decimal places
-- **Pulse Count**: Maximum of 511 pulses supported
+- **Pulse Count**: Range 0-511 pulses (supports fractional values like 0.5, 1.7)
 - **Example**: For 2 pulses with amplitude 10%, the table shows: 10%, 0%, 10%, 0% (2 pulses × 2 segments = 4 segments total)
 - **Random Sampling**: Each time span value is randomly generated within the specified min/max ranges
+
+#### Visual Waveform Display
+- **Real-time Visualization**: SVG-based waveform display showing actual pulse train
+- **Rising/Falling Edges**: Sharp vertical transitions between amplitude levels
+- **Proportional Timing**: Segment widths reflect actual time spans from waveform definition
+- **Amplitude Scaling**: Visual height corresponds to output percentage
+- **Grid Reference**: Background grid for visual alignment
+- **Consistent Display**: Waveform matches the waveform definition table exactly
 
 #### Advanced Settings
 - **Access**: Click gear icon (⚙️) next to any parameter to open Advanced Settings modal
@@ -252,6 +260,7 @@ const generateRandomValue = (min, max) => {
 - **Waveform** = (pulse × pulse count) segments
 - **Example**: 2 pulses = 4 segments (ON, OFF, ON, OFF)
 - **Example**: 3 pulses = 6 segments (ON, OFF, ON, OFF, ON, OFF)
+- **Fractional Pulses**: Supports partial pulses (e.g., 0.5 pulse = 1 partial ON segment)
 
 **Step Size Rounding:**
 - **No Step Size**: Values rounded to 2 decimal places
