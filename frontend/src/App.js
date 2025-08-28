@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import MersenneTwister from 'mersenne-twister';
 import { 
   Play, 
   Square, 
@@ -43,6 +44,62 @@ function App() {
     { output: '0', timeSpan: '0' }
   ]);
 
+  // Initialize Mersenne Twister generator
+  const mt = new MersenneTwister();
+
+  // Generate random number using uniform distribution between min and max
+  const generateRandomValue = (min, max) => {
+    const minVal = parseFloat(min) || 0;
+    const maxVal = parseFloat(max) || 0;
+    if (minVal === maxVal) return minVal;
+    
+    // Use Mersenne Twister for uniform distribution
+    return minVal + (mt.random() * (maxVal - minVal));
+  };
+
+  // Update waveform definition table based on current parameters
+  const updateWaveformDefinition = () => {
+    const pulseCountNum = parseInt(pulseCount) || 1;
+    const amplitudeNum = parseFloat(amplitude) || 0;
+    
+    const newWaveformDefinition = [];
+    
+    // Generate waveform definition for each pulse
+    for (let i = 0; i < pulseCountNum && i < 8; i++) {
+      // Sample pulse width from min/max range
+      const sampledPulseWidth = generateRandomValue(pulseWidth.min, pulseWidth.max);
+      
+      // First segment: Pulse ON (pulse width duration)
+      newWaveformDefinition.push({
+        output: amplitudeNum.toString(),
+        timeSpan: sampledPulseWidth.toFixed(1)
+      });
+      
+      // Second segment: Pulse OFF (interval duration) - always add OFF segment
+      const sampledInterval = generateRandomValue(interval.min, interval.max);
+      
+      newWaveformDefinition.push({
+        output: '0',
+        timeSpan: sampledInterval.toFixed(1)
+      });
+    }
+    
+    // Fill remaining slots with zeros if needed
+    while (newWaveformDefinition.length < 8) {
+      newWaveformDefinition.push({
+        output: '0',
+        timeSpan: '0'
+      });
+    }
+    
+    setWaveformDefinition(newWaveformDefinition);
+  };
+
+  // Initialize waveform definition on component mount
+  useEffect(() => {
+    updateWaveformDefinition();
+  }, []); // Empty dependency array means this runs once on mount
+
   const handleStart = () => {
     setIsRunning(!isRunning);
   };
@@ -50,6 +107,7 @@ function App() {
   const handleAmplitudeChange = (value) => {
     if (isValidPositiveNumber(value)) {
       setAmplitude(value);
+      updateWaveformDefinition();
     }
   };
 
@@ -62,6 +120,7 @@ function App() {
   const handlePulseCountChange = (value) => {
     if (isValidPositiveNumber(value)) {
       setPulseCount(value);
+      updateWaveformDefinition();
     }
   };
 
@@ -72,7 +131,8 @@ function App() {
   };
 
   const handleMaxPulseCount = () => {
-    setPulseCount('999');
+    setPulseCount('511');
+    updateWaveformDefinition();
   };
 
   const handleMaxRepeatCount = () => {
@@ -174,6 +234,7 @@ function App() {
     // Valid value, proceed with recalculation
     setPulseWidth(newPulseWidth);
     setLocalPulseWidth(newPulseWidth);
+    updateWaveformDefinition();
     
     if (lockedParameter === 'period') {
       // Period is locked, recalculate interval
@@ -278,6 +339,7 @@ function App() {
     // Valid value, proceed with recalculation
     setInterval(newInterval);
     setLocalInterval(newInterval);
+    updateWaveformDefinition();
     
     if (lockedParameter === 'period') {
       // Period is locked, recalculate pulse width
@@ -379,6 +441,7 @@ function App() {
     // Valid value, proceed with recalculation
     setPeriod(newPeriod);
     setLocalPeriod(newPeriod);
+    updateWaveformDefinition();
     
     if (lockedParameter === 'pulseWidth') {
       // Pulse width is locked, recalculate interval
@@ -822,8 +885,20 @@ function App() {
         {/* Waveform Definition Section */}
         <div>
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-gray-800">Waveform Definition</h2>
+            <div>
+              <h2 className="text-lg font-bold text-gray-800">Waveform Definition</h2>
+              <p className="text-sm text-gray-600 mt-1">
+                Automatically generated from Period, Pulse Width, Interval, and Pulse Count parameters
+              </p>
+            </div>
             <div className="flex space-x-2">
+              <button 
+                onClick={updateWaveformDefinition}
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-md font-medium transition-colors flex items-center space-x-2"
+              >
+                <Settings className="w-4 h-4" />
+                <span>Update from Parameters</span>
+              </button>
               <button className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md font-medium transition-colors flex items-center space-x-2">
                 <Upload className="w-4 h-4" />
                 <span>Import</span>
@@ -850,7 +925,8 @@ function App() {
                         type="text"
                         value={row.output}
                         onChange={(e) => handleWaveformDefinitionChange(index, 'output', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2 py-1 border border-gray-300 rounded bg-gray-100 text-gray-600"
+                        readOnly
                       />
                     </td>
                     <td className="px-4 py-2">
@@ -858,7 +934,8 @@ function App() {
                         type="text"
                         value={row.timeSpan}
                         onChange={(e) => handleWaveformDefinitionChange(index, 'timeSpan', e.target.value)}
-                        className="w-full px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                        className="w-full px-2 py-1 border border-gray-300 rounded bg-gray-100 text-gray-600"
+                        readOnly
                       />
                     </td>
                   </tr>

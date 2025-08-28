@@ -72,6 +72,7 @@ The Advanced Pulse Train Interface provides an intuitive GUI for setting up comp
    - Configure Period: Min = 120ms, Max = 540ms
    - Configure Pulse Width: Min = 100ms, Max = 400ms
    - Configure Interval: Min = 20ms, Max = 140ms
+   - Configure Pulse Count: 1 (max = 511)
 
 2. **Lock a Parameter**:
    - Click the lock icon next to any parameter to lock it
@@ -100,9 +101,15 @@ The Advanced Pulse Train Interface provides an intuitive GUI for setting up comp
 - Interval Min automatically calculates to 70ms (120 - 50 = 70)
 
 #### Waveform Definition
-- Configure custom waveform segments with output percentage and time span
-- Add multiple segments for complex pulse patterns
-- Export and import waveform configurations
+- **Automatic Generation**: Waveform definition table is automatically generated from parameters
+- **Pulse Structure**: One pulse = one ON segment (pulse width) + one OFF segment (interval)
+- **Period Relationship**: Period = Pulse Width + Interval
+- **Waveform Structure**: Waveform consists of (pulse × pulse count) segments
+- **Output Values**: ON segments use amplitude percentage, OFF segments use 0%
+- **Time Spans**: Randomly sampled from min/max ranges using Mersenne Twister uniform distribution
+- **Pulse Count**: Maximum of 511 pulses supported
+- **Example**: For 2 pulses with amplitude 10%, the table shows: 10%, 0%, 10%, 0% (2 pulses × 2 segments = 4 segments total)
+- **Random Sampling**: Each time span value is randomly generated within the specified min/max ranges
 
 ## Technical Details
 
@@ -205,6 +212,37 @@ const calculateAvg = (min, max) => {
   return ((minVal + maxVal) / 2).toFixed(1);
 };
 ```
+
+### Random Sampling for Waveform Definition
+Time span values in the waveform definition table are randomly sampled using Mersenne Twister uniform distribution:
+```javascript
+// Initialize Mersenne Twister generator
+const mt = new MersenneTwister();
+
+// Generate random value within min/max range
+const generateRandomValue = (min, max) => {
+  const minVal = parseFloat(min) || 0;
+  const maxVal = parseFloat(max) || 0;
+  if (minVal === maxVal) return minVal;
+  
+  // Use Mersenne Twister for uniform distribution
+  return minVal + (mt.random() * (maxVal - minVal));
+};
+```
+
+**Sampling Process:**
+- **Pulse Width Segments**: Randomly sampled from pulse width min/max range
+- **Interval Segments**: Randomly sampled from interval min/max range
+- **Distribution**: Uniform distribution using Mersenne Twister algorithm
+- **Precision**: Values rounded to 1 decimal place
+
+**Segment Structure:**
+- **One pulse** = **2 segments** (1 ON segment + 1 OFF segment)
+- **N pulses** = **2N segments** total (N ON segments + N OFF segments)
+- **Period** = Pulse Width + Interval (one complete pulse cycle)
+- **Waveform** = (pulse × pulse count) segments
+- **Example**: 2 pulses = 4 segments (ON, OFF, ON, OFF)
+- **Example**: 3 pulses = 6 segments (ON, OFF, ON, OFF, ON, OFF)
 
 ### State Management Architecture
 - **Main State**: Stores the actual validated parameter values

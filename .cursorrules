@@ -142,6 +142,12 @@ Period = Pulse Width + Interval
 
 This relationship is the cornerstone of all calculations and validations in the system.
 
+### Pulse and Waveform Structure
+- **One Pulse**: Consists of one ON segment (pulse width) + one OFF segment (interval)
+- **Period**: One complete pulse cycle = Pulse Width + Interval
+- **Waveform**: Consists of (pulse × pulse count) segments
+- **Total Segments**: 2 × pulse count (each pulse has 2 segments)
+
 ### Parameter Locking System
 The system implements an intelligent parameter locking mechanism where **exactly one parameter must always be locked**:
 
@@ -256,3 +262,12 @@ const calculateAvg = (min, max) => {
 - Prevent invalid configurations that would result in negative values
 - Provide immediate visual feedback for locked parameters
 - Calculate and display average values automatically
+
+### Waveform Definition Generation
+- **Pulse Structure**: One pulse = one ON segment (pulse width) + one OFF segment (interval)
+- **Waveform Structure**: Waveform consists of (pulse × pulse count) segments
+- **Total Segments**: 2 × pulse count (each pulse has 2 segments)
+- **Random Sampling**: Use Mersenne Twister uniform distribution for time span values
+- **Pattern**: ON, OFF, ON, OFF, ... (repeating for each pulse)
+- **Maximum Pulses**: 511 pulses supported
+- **Time Span Sampling**: Randomly sample from min/max ranges for each segment
